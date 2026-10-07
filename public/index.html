@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="theme-color" content="#f2f6fa" />
+  <title>Jonny.io</title>
+  <link rel="icon" href="me.jpg" />
+  <link rel="apple-touch-icon" href="me.jpg" />
+  <style>
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { margin: 0; height: 100%; overflow: hidden; overscroll-behavior: none; background: #f2f6fa;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; touch-action: none;
+      -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+    canvas { display: block; position: fixed; inset: 0; }
+    .panel { position: fixed; background: rgba(0,0,0,.42); color: #fff; border-radius: 10px; padding: 10px 14px; font-size: 14px; }
+    #hud { top: calc(12px + env(safe-area-inset-top)); left: calc(12px + env(safe-area-inset-left)); }
+    #hud b { font-size: 16px; }
+    #lb { top: calc(12px + env(safe-area-inset-top)); right: calc(12px + env(safe-area-inset-right)); min-width: 190px; }
+    #lb h3 { margin: 0 0 6px; text-align: center; font-size: 16px; }
+    #lb ol { margin: 0; padding-left: 22px; }
+    #lb li { white-space: nowrap; }
+    #lb li.me { color: #ffd84d; font-weight: 700; }
+    #lb .online { margin-top: 6px; font-size: 12px; opacity: .85; text-align: center; }
+    #help { bottom: 12px; left: 12px; font-size: 12px; opacity: .85; }
+    #mobile { position: fixed; right: calc(16px + env(safe-area-inset-right)); bottom: calc(16px + env(safe-area-inset-bottom));
+      display: none; gap: 14px; }
+    #mobile button { width: 72px; height: 72px; border-radius: 50%; border: 0; background: rgba(0,0,0,.42); color: #fff;
+      font-weight: 800; font-size: 13px; touch-action: none; }
+    #mobile button:active { background: rgba(0,0,0,.6); transform: scale(.95); }
+    #death { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; background: rgba(10,20,30,.55); padding: 16px; }
+    #death .card { background: #fff; padding: 28px 32px; border-radius: 16px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,.3); width: 100%; max-width: 320px; }
+    #death img { width: 96px; height: 96px; border-radius: 50%; object-fit: cover; }
+    #death h2 { margin: 12px 0 4px; }
+    #death button { margin-top: 16px; padding: 14px 32px; font-size: 17px; font-weight: 700; border: 0; border-radius: 999px; background: #2d8cff; color: #fff; cursor: pointer; width: 100%; }
+
+
+    #login { position: fixed; inset: 0; z-index: 20; display: flex; align-items: center; justify-content: center; background: rgba(20,35,50,.72); padding: 18px; }
+    #login .card { width: min(92vw, 360px); background: #fff; border-radius: 18px; padding: 26px; box-shadow: 0 18px 60px rgba(0,0,0,.28); text-align: center; }
+    #login img { width: 92px; height: 92px; object-fit: cover; border-radius: 50%; }
+    #login h1 { margin: 10px 0 4px; font-size: 28px; color: #142332; }
+    #login p { margin: 0 0 16px; color: #5b6875; font-size: 14px; }
+    #login input { width: 100%; padding: 14px 16px; border: 1px solid #cfd7df; border-radius: 12px; font-size: 17px; outline: none; }
+    #login input:focus { border-color: #2d8cff; box-shadow: 0 0 0 3px rgba(45,140,255,.14); }
+    #login button { width: 100%; margin-top: 12px; padding: 14px 18px; border: 0; border-radius: 999px; background: #2d8cff; color: #fff; font-size: 17px; font-weight: 800; cursor: pointer; }
+    #loginStatus { min-height: 20px; margin-top: 10px; color: #c53939; font-size: 13px; }
+
+    /* Phones */
+    @media (pointer: coarse), (max-width: 700px) {
+      #mobile { display: flex; }
+      #help { display: none; }
+      .panel { font-size: 12px; padding: 7px 10px; }
+      #hud b { font-size: 13px; }
+      #lb { min-width: 0; max-width: 46vw; }
+      #lb h3 { font-size: 13px; margin-bottom: 3px; }
+      #lb ol { padding-left: 0; list-style-position: inside; }
+      #lb li { overflow: hidden; text-overflow: ellipsis; }
+      #lb li:nth-child(n+6) { display: none; } /* top 5 only on phones */
+      #lb .online { font-size: 10px; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="c"></canvas>
+  <div id="login"><div class="card">
+    <img src="me.jpg" alt="Jonny" />
+    <h1>Jonny.io</h1>
+    <p>Enter a name to join the live multiplayer server.</p>
+    <form id="loginForm">
+      <input id="nameInput" maxlength="24" autocomplete="nickname" placeholder="Your player name" required />
+      <button type="submit">PLAY ONLINE</button>
+    </form>
+    <div id="loginStatus"></div>
+  </div></div>
+
+  <div id="hud" class="panel">You are <b id="myName">…</b><br />Mass: <b id="myMass">0</b></div>
+  <div id="lb" class="panel"><h3>Leaderboard</h3><ol id="lbList"></ol><div class="online" id="online"></div></div>
+  <div id="help" class="panel">Mouse to move · <b>Space</b> split · <b>W</b> eject mass</div>
+  <div id="mobile"><button id="btnEject">EJECT</button><button id="btnSplit">SPLIT</button></div>
+  <div id="death"><div class="card">
+    <img src="me.jpg" alt="" />
+    <h2>You got eaten!</h2>
+    <div>Biggest mass: <b id="best">0</b></div>
+    <button id="again">Play again</button>
+  </div></div>
+
+  <script src="engine.js"></script>
+  <script src="client.js"></script>
+</body>
+</html>
